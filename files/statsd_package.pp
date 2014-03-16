@@ -2,21 +2,41 @@
 
 class statsd-package{
 
+	##install the node package 
+
+  package { 'node':
+    ensure => present,
+    group => 'root',
+    provider => 'git',
+    source => 'https://github.com/joyent/node',
+    mode   => '0644', 
+  
+  }  
+
+
+  file {'/opt/node':
+  	ensure => directory
+  	before ==> Package['node'],
+
+  }
+
+
 	package {'node': ensure => present}
-	package {'npm': ensure => present}
+	
 
 	
-	exec {'install_node':
-		command => '/opt/ git clone https://github.com/joyent/node 
-		creates => '/opt/node'
-	}
+#	exec {'install_node':
+#		command => '/opt/ git clone https://github.com/joyent/node 
+#		creates => '/opt/node'
+#	}
 
-	file {'/opt/node/':
-		ensure => directory	
-	}
+#	file {'/opt/node/':
+#		ensure => directory	
+#	}
 
 	exec {'install_node':
 		command => '/opt/node ; ./configure && make && make install'
+		creates => "/opt/node"
 		require => Package ['nodejs'],
 	}
 
@@ -33,17 +53,19 @@ class statsd-package{
 ##		provider => 'wget'
 #	}
 
-#	exec {'/tmp/ wget --no-check-certificate http://npmjs.org/install.sh ; sh install.sh':
-#		creates => '/tmp/install.sh'
-#		subscribe => Package ['install.sh']
-#	}
+
+	package {'npm': ensure => present}
+
+	exec {'/tmp/ wget --no-check-certificate http://npmjs.org/install.sh ; sh install.sh':
+		creates => '/tmp/install.sh'
+		subscribe => Package ['install.sh']
+	}
 
 	file {'/usr/bin/npm':
-		ensure => present 
+		ensure => directory,
 	}
 
 	exec {'/usr/bin/npm install express':
-		require => Package ['npm']
+		require => Package ['npm'],
 	}
 }
-
