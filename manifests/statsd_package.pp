@@ -13,15 +13,13 @@ class statsd-package{
   
   }  
 
-
   file {'/opt/node':
   	ensure => directory
-  	before ==> Package['node'],
+  	notify => Package['node'],
 
   }
 
-
-	package {'node': ensure => present}
+  package {'node': ensure => present}
 	
 
 	
@@ -37,7 +35,7 @@ class statsd-package{
 	exec {'install_node':
 		command => '/opt/node ; ./configure && make && make install'
 		creates => "/opt/node"
-		require => Package ['nodejs'],
+		require => Package ['node'],
 	}
 
 	file {'/usr/local/bin/node':
@@ -58,14 +56,16 @@ class statsd-package{
 
 	exec {'/tmp/ wget --no-check-certificate http://npmjs.org/install.sh ; sh install.sh':
 		creates => '/tmp/install.sh'
-		subscribe => Package ['install.sh']
+##		subscribe => Package ['install.sh']
 	}
 
 	file {'/usr/bin/npm':
 		ensure => directory,
+		require => Package ['npm'],
 	}
 
 	exec {'/usr/bin/npm install express':
-		require => Package ['npm'],
+		require => File ['npm'],
+
 	}
 }
