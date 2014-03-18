@@ -21,8 +21,6 @@ class statsd-package{
 
   package {'node': ensure => present}
 	
-
-	
 #	exec {'install_node':
 #		command => '/opt/ git clone https://github.com/joyent/node 
 #		creates => '/opt/node'
