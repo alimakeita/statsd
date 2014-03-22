@@ -1,32 +1,33 @@
-class statsd ($graphite_host, $graphite_port = 2003, $port = 8125, $debug = true, {
+#class statsd ($graphite_host, $graphite_port = 2003, $port = 8125, $debug = true, {
 
+class statsd {
 ## the statsd package 
 #download statsd
 
-	package {'statsd':
+
+	vcsrepo {"/opt/statsd":
 		ensure => present,
-    	group => 'root',
-    	provider => 'git',
-    	source => 'https://github.com/etsy/statsd.git',
-    	mode   => '0644', 
-  
-	  }  
+        provider => git,
+        source => 'https://github.com/etsy/statsd.git',
+        revision => 'master',
+    } 
+
 
 	file {'/opt/statsd':
-    	ensure => directory,
-    	owner => 'root',
-    	group => 'root',
-    	mode => '0755',
+    	ensure => present,
+#    	owner => 'root',
+ #   	group => 'root',
+ #   	mode => '0755',
+ 		require => Vcsrepo["/opt/statsd"],
+    }
 	}
 	
 #init script and service set-up for statsd
 
 	file { '/etc/init.d/statsd':
-		ensure => file,
-		owner => root, 
-		mode => '0644',
-		group => 'root,
-		source => 'puppet:///modules/statsd/statsd-init.sh',
+		ensure => present,
+        source => 'puppet:///modules/statsd/statsd-init.sh',
+		mode => '0755',
 	}
 
 	service {'statsd':
@@ -40,7 +41,7 @@ class statsd ($graphite_host, $graphite_port = 2003, $port = 8125, $debug = true
 	file { '/opt/statsd/local.js':
 		ensure => file,
 		source => 'puppet:///modules/statsd/local.js',
-		mode  => '0755',
+		mode  => '0644',
 		require =>File['/opt/statsd']
 	}
 
@@ -48,7 +49,7 @@ class statsd ($graphite_host, $graphite_port = 2003, $port = 8125, $debug = true
 		ensure => file,
 		owner => root,
 		group => root,
-		mode  => '0775'
+		mode  => '0644'
 		content => template('statsd/statsdconf.js.erb')
 		require => File['/opt/statsd'],
 	
@@ -62,12 +63,4 @@ class statsd ($graphite_host, $graphite_port = 2003, $port = 8125, $debug = true
  		mode => '0755',
  	} 
 	
-	service {'statsd':
-		ensure     => running,
-   	 	enable     => true,
-    	hasrestart => true,
-    	hasstatus  => true,
-    	require    => Package['statsd'],
-	}
-
 }

@@ -4,66 +4,55 @@ class statsd-package{
 
 	##install the node package 
 
-  package { 'node':
-    ensure => present,
-    group => 'root',
-    provider => 'git',
-    source => 'https://github.com/joyent/node',
-    mode   => '0644', 
-  
-  }  
+	vcsrepo { "/opt/node":
+    	ensure => present,
+        provider => git,
+        source  => 'https://github.com/joyent/node.git',
+        revision => 'master',
+  	}
 
-  file {'/opt/node':
-  	ensure => directory
-  	notify => Package['node'],
 
-  }
+  	# file {'/opt/node':
+  	# 	ensure => directory
+  	# 	notify => Package['node'],
+  	# }
 
-  package {'node': ensure => present}
+  #	package {'node': ensure => present}
 	
-#	exec {'install_node':
-#		command => '/opt/ git clone https://github.com/joyent/node 
-#		creates => '/opt/node'
-#	}
-
-#	file {'/opt/node/':
-#		ensure => directory	
-#	}
-
 	exec {'install_node':
-		command => '/opt/node ; ./configure && make && make install'
-		creates => "/opt/node"
-		require => Package ['node'],
+		command => './configure && make && make install',
+        creates => '/opt/node',
+		cwd => "/opt/node",
+        path => '/opt/node',
+#        require => File['/opt/node'],
 	}
 
 	file {'/usr/local/bin/node':
-		ensure => present
+		ensure => present,
 	}
 
 ## installing npm in the /tmp directory
 
-#	package {'install.sh':
-#		name = $install.sh
-#		ensure => latest,
-#		source => '/tmp/$install.sh'
-##		provider => 'wget'
-#	}
+exec {'install.sh':
+		command => '/usr/bin/wget --no-check-certificate http://npmjs.org/install.sh ; sh install.sh',
+		creates => '/tmp/install.sh',
+		cwd => '/tmp',
+        path => '/usr/bin/wget',
+##		subscribe => Package ['install.sh']
+	}
 
 
 	package {'npm': ensure => present}
 
-	exec {'/tmp/ wget --no-check-certificate http://npmjs.org/install.sh ; sh install.sh':
-		creates => '/tmp/install.sh'
-##		subscribe => Package ['install.sh']
-	}
-
 	file {'/usr/bin/npm':
-		ensure => directory,
-		require => Package ['npm'],
+		ensure => present,
 	}
 
-	exec {'/usr/bin/npm install express':
-		require => File ['npm'],
-
+	exec {'npm install express':  
+		command => '/usr/bin/npm install express',
+		cwd => '/usr/bin',
+        path => '/usr/bin',
+#		require => File['/usr/bin/npm'],
 	}
 }
+
