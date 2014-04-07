@@ -1,24 +1,33 @@
 #class statsd ($graphite_host, $graphite_port = 2003, $port = 8125, $debug = true, {
 
 class statsd {
+
+include statsd::statsd_package
+
 ## the statsd package 
 #download statsd
 
 
 	vcsrepo {"/opt/statsd":
-		ensure => present,
-        provider => git,
-        source => 'https://github.com/etsy/statsd.git',
-        revision => 'master',
+  	   ensure => present,
+           provider => git,
+           source => 'https://github.com/etsy/statsd.git',
+           revision => 'master',
     } 
 
+	firewall {'100 add port 8125 so that we can send data to the statsd server from external sources':
+	   port => [8125],
+	   proto => udp,
+	   action => accept,
+
+    }	  
 
 	file {'/opt/statsd':
-    	ensure => present,
+    	   ensure => present,
 #    	owner => 'root',
  #   	group => 'root',
  #   	mode => '0755',
- 		require => Vcsrepo["/opt/statsd"],
+           require => Vcsrepo["/opt/statsd"],
     }
 	}
 	
@@ -42,15 +51,15 @@ class statsd {
 		ensure => file,
 		source => 'puppet:///modules/statsd/local.js',
 		mode  => '0644',
-		require =>File['/opt/statsd']
+		require =>File['/opt/statsd'],
 	}
 
 	file {'/opt/statsd/statsdconf.js':
 		ensure => file,
 		owner => root,
 		group => root,
-		mode  => '0644'
-		content => template('statsd/statsdconf.js.erb')
+		mode  => '0644',
+		content => template('statsd/statsdconf.js.erb'),
 		require => File['/opt/statsd'],
 	
 	}
@@ -59,8 +68,8 @@ class statsd {
  	
  	file {'/opt/statsd/stats_test.py':
  		ensure => file,
- 		source => 'puppet:///modules/statsd/stats_test.py'
- 		mode => '0755',
+ 		source => 'puppet:///modules/statsd/stats_test.py',
+ 		mode => '0644',
  	} 
 	
 }
