@@ -1,4 +1,4 @@
-#class statsd ($graphite_host, $graphite_port = 2003, $port = 8125, $debug = true, {
+#the statsd class 
 
 class statsd {
 
@@ -7,29 +7,35 @@ include statsd::statsd_package
 ## the statsd package 
 #download statsd
 
-
-	vcsrepo {"/opt/statsd":
-  	   ensure => present,
-           provider => git,
-           source => 'https://github.com/etsy/statsd.git',
-           revision => 'master',
-    } 
-
-	firewall {'100 add port 8125 so that we can send data to the statsd server from external sources':
-	   port => [8125],
-	   proto => udp,
-	   action => accept,
-
-    }	  
-
-	file {'/opt/statsd':
-    	   ensure => present,
+#	file {'/opt/statsd':
+#    	ensure => directory,
 #    	owner => 'root',
- #   	group => 'root',
- #   	mode => '0755',
-           require => Vcsrepo["/opt/statsd"],
+#    	group => 'root',
+#    	mode => '0755',
+#	}
+
+    vcsrepo {"/opt/statsd":
+		ensure => present,
+        provider => git,
+        source => 'https://github.com/etsy/statsd.git',
+        revision => 'master',
     }
-	}
+
+
+    firewall {'100 add port 8125 so that we can send data to the statsd server from external sources':
+           port => [8125],
+           proto => udp,
+           action => accept,
+
+} 
+
+
+    file {'/opt/statsd':
+#       source => 'puppet:///modules/statsd/statsd',
+#       recurse => true,
+       ensure => present,
+       require => Vcsrepo["/opt/statsd"],
+    }
 	
 #init script and service set-up for statsd
 
@@ -39,10 +45,11 @@ include statsd::statsd_package
 		mode => '0755',
 	}
 
+
 	service {'statsd':
 		ensure => running,
 		enable => true,
-		require => File ['/etc/init.d/statsd'], 
+        require => File['/etc/init.d/statsd'],
 	}	
 
 #configuration files that need to be in the opt/statsd directory
@@ -51,13 +58,11 @@ include statsd::statsd_package
 		ensure => file,
 		source => 'puppet:///modules/statsd/local.js',
 		mode  => '0644',
-		require =>File['/opt/statsd'],
+		require => File['/opt/statsd'],
 	}
 
-	file {'/opt/statsd/statsdconf.js':
+	file { '/opt/statsd/statsdconf.js':
 		ensure => file,
-		owner => root,
-		group => root,
 		mode  => '0644',
 		content => template('statsd/statsdconf.js.erb'),
 		require => File['/opt/statsd'],
@@ -66,10 +71,9 @@ include statsd::statsd_package
 
 #ping file for testing purposes, to make sure connection is established between statsd and graphite
  	
- 	file {'/opt/statsd/stats_test.py':
+ 	file { '/opt/statsd/stats_test.py':
  		ensure => file,
  		source => 'puppet:///modules/statsd/stats_test.py',
  		mode => '0644',
  	} 
-	
 }

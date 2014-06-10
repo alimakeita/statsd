@@ -1,6 +1,7 @@
 {
-graphitePort: <%= graphite_port  %>  ##2003
-, graphiteHost: "<%= graphite_host %>" ##"127.0.0.1"
-, debug: <%= @debug %> ##true
-, port: <%= port %>  ##8125
+graphitePort: 2003
+, graphiteHost: "127.0.0.1"
+, debug: true
+, port: 8125
+, percentThreshold: [ 25, 75, 90, 95 ]
 }
